@@ -8,7 +8,7 @@ console.log("The Mauryans");
 
 const AppLayout = () => {
     return (
-        <div className="flex flex-col min-h-screen">
+        <div className="bg-gray-900 flex flex-col min-h-screen">
             <header>
                 <Header />
             </header>
