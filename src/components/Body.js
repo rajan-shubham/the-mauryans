@@ -1,18 +1,67 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import CustomSearch from "./CustomSearch";
 
 const Body = () => {
     const [searchText, setSearchText] = useState("");
     const [selectedEngine, setSelectedEngine] = useState(null);
     const [showSelection, setShowSelection] = useState(true);
+    const googleContainerRef = useRef(null);
 
     useEffect(() => {
+        // Function to safely remove a script element
+        const safeRemoveScript = (id) => {
+            try {
+                const script = document.getElementById(id);
+                if (script && script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+            } catch (error) {
+                console.error("Error removing script:", error);
+            }
+        };
+
         if (selectedEngine === "google") {
+            // Clear previous script if exists
+            safeRemoveScript("google-search-script");
+            
+            // Clear the container
+            if (googleContainerRef.current) {
+                googleContainerRef.current.innerHTML = '<div class="gcse-search"></div>';
+            }
+            
+            // Add new script
             const script = document.createElement("script");
             script.src = "https://cse.google.com/cse.js?cx=6232bdbd51c464e5a";
             script.async = true;
-            document.getElementById("google-search-container").appendChild(script);
+            script.id = "google-search-script";
+            document.head.appendChild(script);
+            
+            // Clear hash fragment if present
+            if (window.location.hash && window.location.hash.includes('gsc')) {
+                try {
+                    window.history.pushState("", document.title, window.location.pathname);
+                } catch (e) {
+                    console.error("Error clearing hash:", e);
+                }
+            }
+        } else if (selectedEngine === "custom") {
+            // Remove Google script when switching to custom search
+            safeRemoveScript("google-search-script");
+            
+            // Clear hash fragment if present
+            if (window.location.hash && window.location.hash.includes('gsc')) {
+                try {
+                    window.history.pushState("", document.title, window.location.pathname);
+                } catch (e) {
+                    console.error("Error clearing hash:", e);
+                }
+            }
         }
+
+        // Cleanup function
+        return () => {
+            // No need to remove scripts on unmount as they will be managed by the effect
+        };
     }, [selectedEngine]);
 
     const handleEngineSelect = (engine) => {
@@ -56,7 +105,7 @@ const Body = () => {
                     </div>
                     
                     {selectedEngine === "google" ? (
-                        <div id="google-search-container" className="m-8 p-10">
+                        <div id="google-search-container" ref={googleContainerRef} className="m-8 p-10">
                             <div className="gcse-search"></div>
                         </div>
                     ) : (
